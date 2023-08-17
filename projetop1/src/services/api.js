@@ -1,6 +1,8 @@
 import axios from 'axios'
 
+const IP = ''
+
 export const api = axios.create({
-  baseURL: 'http://192.168.0.103:3001',
+  baseURL: `http://${IP}:3001`,
   timeout: 5000
 })
