@@ -1,0 +1,23 @@
+# Use the official Node.js image as the base image
+FROM node:14
+
+# Set the working directory
+WORKDIR /app
+
+# Install Expo CLI globally
+RUN npm install -g expo-cli
+
+# Install project dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the project files
+COPY . .
+
+# Expose the necessary ports
+EXPOSE 19000
+EXPOSE 19001
+EXPOSE 19002
+
+# Start the Expo development server
+CMD ["expo", "start"]
