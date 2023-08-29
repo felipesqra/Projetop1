@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { View, Text, Button } from 'react-native';
-import {db} from '../../../firebase/firebase';
+import {db} from '../../../database-config/firebase';
 import { CARD_SCREEN } from '../../constants/screens'
 import {collection, setDoc, doc, getDoc} from 'firebase/firestore';
 function Home({ navigation }) {
