@@ -3,6 +3,11 @@
 # dependencies
 node_modules/
 
+#
+.env
+.idea/*
+package-lock.json
+
 # Expo
 .expo/
 dist/
