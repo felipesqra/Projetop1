@@ -1,7 +1,5 @@
 import { CARD_SCREEN } from './constants/screens'
-import { createUser, readUser, generateUserId } from '../database-config/database'
-import {useEffect} from "react";
-import {Button, View, Text} from "react-native";
+import { createUser, readUser, generateUserId } from '../../backend/database-config/database'
 function Home({ navigation }) {
     function write() {
         const docData = {
