@@ -5,7 +5,7 @@ node_modules/
 
 #
 .env
-.idea/*
+.idea/
 package-lock.json
 
 # Expo
