@@ -1,5 +1,15 @@
-import {db} from '../../../database-config/firebase';
-import { doc, updateDoc, setDoc, deleteDoc, getDoc, collection } from 'firebase/firestore';
+import { db } from './firebase';
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+    doc as firestoreDoc,
+    setDoc as firestoreSetDoc,
+    updateDoc as firestoreUpdateDoc,
+    deleteDoc as firestoreDeleteDoc,
+    getDoc as firestoreGetDoc
+} from 'firebase/firestore';
 
 // Users collection reference
 const usersCollection = collection(db, 'users');
@@ -9,18 +19,27 @@ const groupsCollection = collection(db, 'groups');
 
 // User document reference
 function userDocument(userId) {
-    return doc(usersCollection, userId);
+    return firestoreDoc(usersCollection, userId);
 }
 
 // Group document reference
 function groupDocument(groupId) {
-    return doc(groupsCollection, groupId);
+    return firestoreDoc(groupsCollection, groupId);
 }
 
 // CRUD operations for users
 const createUser = async (userData) => {
     try {
-        await setDoc(userDocument(userData.userId), userData);
+        const userIdExists = await checkUserIdExists(userData.userId);
+        const pixExists = await checkPixExists(userData.pix);
+        const emailExists = await checkEmailExists(userData.email);
+
+        if (userIdExists || pixExists || emailExists) {
+            console.error('User with duplicate values already exists');
+            return;
+        }
+
+        await firestoreSetDoc(userDocument(userData.userId), userData);
         console.log('User created successfully');
     } catch (error) {
         console.error('Error creating user:', error);
@@ -29,7 +48,7 @@ const createUser = async (userData) => {
 
 const updateUser = async (userId, updatedFields) => {
     try {
-        await updateDoc(userDocument(userId), updatedFields);
+        await firestoreUpdateDoc(userDocument(userId), updatedFields);
         console.log('User updated successfully');
     } catch (error) {
         console.error('Error updating user:', error);
@@ -38,7 +57,7 @@ const updateUser = async (userId, updatedFields) => {
 
 const deleteUser = async (userId) => {
     try {
-        await deleteDoc(userDocument(userId));
+        await firestoreDeleteDoc(userDocument(userId));
         console.log('User deleted successfully');
     } catch (error) {
         console.error('Error deleting user:', error);
@@ -47,7 +66,7 @@ const deleteUser = async (userId) => {
 
 const readUser = async (userId) => {
     try {
-        const userSnapshot = await getDoc(userDocument(userId));
+        const userSnapshot = await firestoreGetDoc(userDocument(userId));
         if (userSnapshot.exists()) {
             return userSnapshot.data();
         } else {
@@ -63,25 +82,74 @@ const readUser = async (userId) => {
 // CRUD operations for groups
 const createGroup = async (groupData) => {
     try {
-        await setDoc(groupDocument(groupData.groupId), groupData);
+        const groupIdExists = await checkGroupIdExists(groupData.groupId);
+
+        if (groupIdExists) {
+            console.error('Group with duplicate groupId already exists');
+            return;
+        }
+
+        await firestoreSetDoc(groupDocument(groupData.groupId), groupData);
         console.log('Group created successfully');
     } catch (error) {
         console.error('Error creating group:', error);
     }
 };
 
-// Similar to updateUser, deleteGroup, and readGroup functions
+// Check if a user ID already exists
+const checkUserIdExists = async (userId) => {
+    const userSnapshot = await firestoreGetDoc(userDocument(userId));
+    return userSnapshot.exists();
+};
 
-export { createUser, updateUser, deleteUser, readUser, createGroup };
+// Check if a pix value already exists
+const checkPixExists = async (pix) => {
+    try {
+        const usersRef = collection(db, 'users');
+        const emailQuery = query(usersRef, where('pix', '==', pix));
+        const querySnapshot = await getDocs(emailQuery);
 
-// // Generate a unique ID for user and group
-// const userId = doc(usersCollection).id; // Get a unique user ID
-// const groupId = doc(groupsCollection).id; // Get a unique group ID
-//
-// // Add the generated IDs to the user and group data
-// userData.userId = userId;
-// groupData.groupId = groupId;
-//
-// // Using the create functions
-// createUser(userData);
-// createGroup(groupData);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error('Error checking email:', error);
+        return false;
+    }
+};
+
+// Check if an email value already exists
+const checkEmailExists = async (email) => {
+    try {
+        const usersRef = collection(db, 'users');
+        const emailQuery = query(usersRef, where('email', '==', email));
+        const querySnapshot = await getDocs(emailQuery);
+
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error('Error checking email:', error);
+        return false;
+    }
+};
+
+// Check if a group ID already exists
+const checkGroupIdExists = async (groupId) => {
+    const groupSnapshot = await firestoreGetDoc(groupDocument(groupId));
+    return groupSnapshot.exists();
+};
+
+const generateUserId = () => {
+    return firestoreDoc(usersCollection).id;
+};
+
+const generateGroupId = () => {
+    return firestoreDoc(groupsCollection).id;
+};
+
+export {
+    createUser,
+    updateUser,
+    deleteUser,
+    readUser,
+    createGroup,
+    generateUserId,
+    generateGroupId
+};
